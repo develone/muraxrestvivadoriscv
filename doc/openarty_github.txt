@@ -1,0 +1,189 @@
+09/26/16 to 10/30/16 
+***new for 10/18/16 
+forked openarty repo at github.
+
+ubuntu desktop and ubuntu laptop use ssh to pull/push
+
+git remote add upstream https://github.com/ZipCPU/openarty.git
+git remote add upstream https://github.com/ZipCPU/xulalx25soc.git
+git remote add upstream https://github.com/ZipCPU/zipcpu.git
+
+git checkout sw/host/Makefile
+
+git fetch upstream
+
+git merge upstream/master
+
+git push origin master
+
+
+modify openarty/sw/host/Makefile
+
+ZIPD := /home/vidal/wkg/ZIPCPU_GITHUB/zipcpu/sw/zasm
+
+make datestamp
+
+make 
+
+cd wkg
+
+mkdir ARTY_GITHUB
+
+cd ARTY_GITHUB
+
+git clone git@github.com:develone/openarty.git
+
+RPi2B uses https to pull only does not push
+
+git clone https://github.com/develone/openarty.git
+cd openarty
+
+git log
+
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty$ git log
+commit 45a021c9b989f0e2801e89598d5aa051ece84d71
+Author: Me <me@example.com>
+Date:   Sat Oct 29 21:37:28 2016 -0400
+
+    Fixed flash driver bugs, sped up flash operation to full quad SPI mode
+
+
+
+1.) two files in the openarty/rtl folder are not included in the 
+current build.
+openarty/rtl
+	fasttop.v
+	fastmaster.v
+	
+2.) chg to 1 files are required see the file
+	openarty_diffs.txt
+	b.) openarty/sw/Makefile requires a chg to location of ZIPD
+	
+3.) -rwxrwxr-x 1 vidal vidal 2234 Oct 12 15:39 startupex.sh
+	repo has this file at 644 which is not executeable
+
+New shell
+vidal@ws009:~$ . setartyzipcpuPath.sh
+
+	PATH,/home/vidal/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/home/vidal/wkg/zipcpu/trunk/sw/install/cross-tools/bin:/home/vidal/wkg/ARTY_GITHUB/openarty/sw/host
+	
+
+. /opt/Xilinx/Vivado/2016.2/settings64.sh
+
+vivado
+
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ cp ../../../project_2/project_2.runs/impl_1/toplevel.bi* .
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ diff ../../../project_2/project_2.runs/impl_1/toplevel.bit toplevel.bit
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ diff ../../../project_2/project_2.runs/impl_1/toplevel.bin toplevel.bin
+
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ md5sum toplevel.bi*
+5942021faa6f5e5876a613eb9a850071  toplevel.bin
+35d35dc83b8553cc953f84585e9e81c3  toplevel.bit
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ ls -la toplevel.bi*
+-rw-rw-r-- 1 vidal vidal 1474008 Oct 30 07:26 toplevel.bin
+-rw-rw-r-- 1 vidal vidal 1474127 Oct 30 07:26 toplevel.bit
+
+sudo /home/vidal/wkg/ARTY_GITHUB/openarty/sw/host/netuart /dev/ttyUSB1
+sudo /home/pi/ARTY_GITHUB/openarty/sw/host/netuart /dev/ttyUSB1
+Listening on port 6510
+Setting up TTY
+
+New Shell
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ ./wbregs version
+00000100 ( VERSION) : [...(] 20161028
+
+./wbprogram @0x400000 toplevel.bit
+***./zipload -r <filename>  -r to start running also
+currently only starts at 0x4e0000
+
+
+vidal@ws009:~$ ./wbsettime 
+Time set to   101800
+Date set to 20161002
+(Now reads 20161002)
+
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ ./wbregs nettx 0
+
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty/sw/host$ ./netsetup
+
+./manping 6c:62:6d:ef:84:d9 04:82:52:be:da:dd 192.168.1.172 192.168.1.204
+./manping 00:19:db:63:38:f4 04:82:52:be:da:dd 192.168.1.59 192.168.1.204
+./manping 40:a5:ef:05:4d:01 04:82:52:be:da:dd 192.168.1.146 192.168.1.204
+./manping 00:22:3f:fc:fb:4b 04:82:52:be:da:dd 192.168.1.126 192.168.1.204
+
+
+In the file wkg/ARTY_GITHUB/openarty/trunk/bench/cpp/Makefile modified the verilator paths.
+A copy with the chgs is located ~/wkg/ARTY_GITHUB/openarty_chgs/Makefile.
+
+vidal@ws009:~/wkg/ARTY_GITHUB/openarty$ diff bench/cpp/Makefile ../openarty_chgs/Makefile 
+43c43
+< INCS	:= -I$(RTLD)/obj_dir/ -I$(RTLD) -I/usr/share/verilator/include
+---
+> INCS	:= -I$(RTLD)/obj_dir/ -I$(RTLD) -I/usr/local/share/verilator/include
+47c47
+< VLIB	:= /usr/share/verilator/include/verilated.cpp
+---
+> VLIB	:= /usr/local/share/verilator/include/verilated.cpp
+ 
+Setting enviorment to use Vivado
+
+. /opt/Xilinx/Vivado/2016.2/settings64.sh
+Tried a make in wkg/openarty.
+
+ 
+Redeamed the voucher.
+
+
+. /opt/Xilinx/Vivado/2014.4/settings64.sh
+
+    xc7a35ticsg324-1L
+    
+upgrading to 
+Xilinx_Vivado_SDK_2014.4_1119_1_Lin64.bin
+
+Downloaded 
+Xilinx_Vivado_SDK_2014.4_1119_1_Lin64.bin
+
+made the file executable
+ran with sudo
+sudo chown -R vidal:vidal .Xilinx/Vivado/2014.4/
+# ----- REMOVE LINES ABOVE HERE --------------------------
+#
+# This license is valid from Mon Sep 26 19:26:25 UTC 2016.
+#
+# This is license NODELOCKED to HOSTID=6c626def84d9;
+# there is no need to run lmgrd for this license.
+#
+#
+# This is a permanent license generated on Mon Sep 26 19:26:25 UTC 2016
+INCREMENT OEM_ARTY_7A35T_DesignEd xilinxd 2017.09 permanent uncounted \
+2F954267386F \
+VENDOR_STRING=devel,OEM_ARTY_7A35T_DesignEd,software,permanent,_210798212_1777495311_210641399_300 \
+HOSTID=6c626d
+ef84d9 ISSUER="Xilinx Inc" START=26-Sep-2016 \
+TS_OK
+#
+#
+# ----------------------------------------------------------------------
+#  The following PACKAGE definition is a REQUIRED part of this license:
+#
+PACKAGE OEM_ARTY_7A35T_DesignEd xilinxd 2017.09 C1D5B1ABAD71 \
+COMPONENTS="SDK Simulation Implementation Analyzer Synthesis \
+XC7A35T" OPTIONS=SUITE
+#
+# ------------------------------------------------------------------------------
+#
+# ----- REMOVE LINES BELOW HERE --------------------------
+
+10/3/16
+
+needed to install wireshark on ws009.
+sudo ls -l /usr/bin/dumpcap 
+-rwsr-sr-x 1 root root 67552 Apr 12  2012 /usr/bin/dumpcap
+this required sudo chmod +s /usr/bin/dumpcap
+vidal@ws009:~$ wireshark -i ws009
+
+trying to get wireshark on RPi2B.
+sudo ls -l /usr/bin/dumpcap 
+-rwsr-sr-- 1 root wireshark 75368 Sep 21 01:29 /usr/bin/dumpcap
+pi@raspberrypi2-146:~ $ wireshark -i raspberrypi2-146

@@ -1,0 +1,33 @@
+03/24/21
+using /media/vidal/1897b37f-62a7-41b5-9c74-b7039a6c975d/xilinx_112716/
+/dev/sdb1      515930552 384446084 105270068  79% /media/vidal/1897b37f-62a7-41b5-9c74-b7039a6c975d
+/opt/Xilinx/Vivado
+rsync -avl --delete /media/vidal/1897b37f-62a7-41b5-9c74-b7039a6c975d/xilinx_112716/Xilinx/Vivado/2016.2 .
+cd 2016.2
+ls
+bin   doc       ids_lite  lib      settings64.csh  strategies
+data  examples  layouts   scripts  settings64.sh   tps
+cd /opt/Xilinx/Vivado_HLS
+rsync -avl --delete /media/vidal/1897b37f-62a7-41b5-9c74-b7039a6c975d/xilinx_112716/Xilinx/Vivado_HLS/2016.2 .
+ls 
+2013.4  2016.2
+. /opt/Xilinx/Vivado/2016.2/settings64.sh
+-bash: /opt/Xilinx/DocNav/.settings64-DocNav.sh: No such file or directory
+
+Needed to make this chg to bring up vivado
+
+diff settings64.sh /opt/Xilinx/Vivado/2016.2/settings64.sh 
+7c7
+< source /opt/Xilinx/DocNav/.settings64-DocNav.sh
+---
+> #source /opt/Xilinx/DocNav/.settings64-DocNav.sh
+
+A copy was made on wkg/ARTY_GITHUB
+
+#############################################################
+# Copyright (c) 1986-2016 Xilinx, Inc.  All rights reserved. #
+##############################################################
+
+source /opt/Xilinx/Vivado_HLS/2016.2/.settings64-Vivado_High_Level_Synthesis.sh
+source /opt/Xilinx/Vivado/2016.2/.settings64-Vivado.sh
+#source /opt/Xilinx/DocNav/.settings64-DocNav.sh
