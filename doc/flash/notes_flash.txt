@@ -13,3 +13,9 @@ Thanks!
 Dan 
 
 https://www.cypress.com/documentation/datasheets/s25fl128ss25fl256s-128-mb-16-mb256-mb-32-mb-30v-spi-flash-memory?_ga=2.230022548.961187562.1616798949-1785402603.1596803399
+ZipCPU> The old controller was the micron as I recall, the newer controller the spansion.
+<ZipCPU> The one that gets used is controller by the Makefile in the autodata directory.  Look at how the "MEMORY" variable is getting set.
+<ZipCPU> The software in sw/flashdrvr.cpp is supposed to handle both flash devices, although I don't know how well both have been tested since making the last changes to that file.
+ZipCPU> The old controller was the micron as I recall, the newer controller the spansion.
+<ZipCPU> The one that gets used is controller by the Makefile in the autodata directory.  Look at how the "MEMORY" variable is getting set.
+<ZipCPU> The software in sw/flashdrvr.cpp is supposed to handle both flash devices, although I don't know how well both have been tested since making the last changes to that file.
