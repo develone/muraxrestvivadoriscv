@@ -1,0 +1,15 @@
+https://forum.digilentinc.com/topic/16908-arty-a7-flash-chip/
+
+ The original Arty-A7 had a flash chip from Micron on it.  This chip is still listed as the flash chip on the schematic.  The Micron chip also had a lot of design flaws, making it difficult to guarantee that the chip could be brought to a proper reset state upon startup.  This has been a discussion on the forum.
+
+I was recently informed that the newer A7 boards now have a Spansion flash device on them?
+
+While I like the Spansion flash better, may I encourage you to update your schematic and other Arty documentation to reflect this?
+
+Also, can you please share for the record what that new chip is?
+
+Thanks!
+
+Dan 
+
+https://www.cypress.com/documentation/datasheets/s25fl128ss25fl256s-128-mb-16-mb256-mb-32-mb-30v-spi-flash-memory?_ga=2.230022548.961187562.1616798949-1785402603.1596803399
