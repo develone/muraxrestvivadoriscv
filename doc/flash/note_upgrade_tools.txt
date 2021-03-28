@@ -1,0 +1,139 @@
+
+03/27/21 mypi3-16
+autofpga
+commit 95df250da1d829d9ec0ad67822ebe7e85bac00eb (HEAD -> master, origin/master, origin/HEAD)
+Author: ZipCPU <dgisselq@ieee.org>
+Date:   Wed Jan 1 11:38:32 2020 -0500
+
+    Added SLAVE.PORTLIST and SLAVE.PREFIX keys, to provide partial nextgen support
+
+zipcpu 
+commit 006f4c6a0ace5a1e6badcc583520b57cc9212e33 (HEAD)
+Author: ZipCPU <dgisselq@ieee.org>
+Date:   Mon Apr 1 14:52:50 2019 -0400
+
+    Updated interrupt controller, simplified cascades
+
+catzip builddate 20210328
+
+devel@mypi3-21:~/
+sudo config_cat catzip.bin
+devel@mypi3-21:~/testbuilds/catzip/sw/host $ ./arm-wbregs version
+00800010 ( VERSION) : [.!.(] 20210328
+
+devel@mypi3-16:~/testbuilds/catzip/sw/host $ ./arm-wbregs -n mypi3-21 -p 8363 version
+00800010 ( VERSION) : [.!.(] 20210328
+yosys -V
+Yosys 0.9+1706 (git sha1 UNKNOWN, clang 7.0.1-8+rpi3+deb10u2 -fPIC -Os)
+
+nextpnr-ice40 -V
+nextpnr-ice40 -- Next Generation Place and Route (Version b4d029a)
+
+verilator -V
+Verilator 4.100 2020-09-07 rev v4.100-10-g39eea781
+
+/media/devel/1b763776-4e1d-499c-9f24-a116a58c161f/fpgatools/usrlocal.img
+updated icestorm 03/09/21 yosys 03/24/21  nextpnr 03/24/21 with git vs http not pushed to github.
+cpudefs.h design.h verilated bin
+
+devel@mypi3-16:~/SpinalKeyboardtest/sim_axi $ verilator -Wall --trace   -cc MasterTopLevel.v --exe --build sim_main.cpp
+make: Entering directory '/home/devel/SpinalKeyboardtest/sim_axi/obj_dir'
+g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o sim_main.o ../sim_main.cpp
+g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o verilated.o /usr/local/share/verilator/include/verilated.cpp
+g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o verilated_vcd_c.o /usr/local/share/verilator/include/verilated_vcd_c.cpp
+/usr/bin/perl /usr/local/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include VMasterTopLevel.cpp VMasterTopLevel__Trace.cpp VMasterTopLevel__Slow.cpp VMasterTopLevel__Syms.cpp VMasterTopLevel__Trace__Slow.cpp > VMasterTopLevel__ALL.cpp
+g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o VMasterTopLevel__ALL.o VMasterTopLevel__ALL.cpp
+Archive ar -cr VMasterTopLevel__ALL.a VMasterTopLevel__ALL.o
+g++    sim_main.o verilated.o verilated_vcd_c.o VMasterTopLevel__ALL.a      -o VMasterTopLevel
+make: Leaving directory '/home/devel/SpinalKeyboardtest/sim_axi/obj_dir'
+
+devel@mypi3-16:~/SpinalKeyboardtest/sim_axi $ cd ~/testbuilds/catzip
+devel@mypi3-16:~/testbuilds/catzip $ . ./myenv-a.sh 
+/home/devel/zipcpu/sw/install/cross-tools/bin:/home/devel/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
+devel@mypi3-16:~/testbuilds/catzip $ echo $PATH
+/home/devel/zipcpu/sw/install/cross-tools/bin:/home/devel/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
+devel@mypi3-16:~/testbuilds/catzip $ cd rtl/catzip/
+devel@mypi3-16:~/testbuilds/catzip/rtl/catzip $ make verilated 
+verilator -O3 -Mdir ./obj-arm -trace -cc -y cpu -y ../hexbus -y ../pport main.v
+%Error-TIMESCALEMOD: wbscope.v:88:8: Timescale missing on this module as other modules have it (IEEE 1800-2017 3.14.2.2)
+                     main.v:91:8: ... Location of module with timescale
+   91 | module main(i_clk, i_reset,
+      |        ^~~~
+
+icestorm c49586 nextpnr 4419c3 yosys d6d5c2
+icestorm built ok when trying to build nextpr "cmake -DARCH=ice40 ."
+-- Using iCE40 chipdb: /home/devel/nextpnr/ice40/chipdb
+-- Configuring incomplete, errors occurred!
+
+usrlocal032821.img
+squashfs-root
+
+devel@mypi3-16:/usr/local $ md5sum bin/ice*
+9eab93030b19b342315d4439f7faed5c  bin/icebox_asc2hlc
+5085717e6e3ceac8837bf6630edd253f  bin/icebox_chipdb
+eeed36cfc0360a4106777d4967d39998  bin/icebox_colbuf
+4d7f133d51076d4e43b09e216503a785  bin/iceboxdb.py
+5c5d184ed78357b115422aed6e3e7ad7  bin/icebox_diff
+dfeca27a7a7aa87ca6fa108cd6d2cad8  bin/icebox_explain
+60aeaee14b2920ab20d326d353f56463  bin/icebox_hlc2asc
+f35a33236ea26c2ba830727bf709b7ab  bin/icebox_html
+547f268e0d21e56a17842ea901cfbed9  bin/icebox_maps
+18553322cb203b87815f70559de83d12  bin/icebox.py
+0226519e515ce8c16c841569aed895df  bin/icebox_stat
+a2fd2ff4e9d27bf7b8c6783d06561e70  bin/icebox_vlog
+6c9160315aa106c2c8f27ab5845ecd51  bin/icebram
+4ca0ff8a6bb3dcdba992b19e14af857d  bin/icemulti
+0ef23f73fb580c62d9a8c7d5d49e29e6  bin/icepack
+472d4467057045d87af1a4cca5894bfe  bin/icepll
+36a1c40a6125f45d656f0c07645a3ed7  bin/iceprog
+6a673b4c0892f1bd338d790f0cc7c7c9  bin/icetime
+0ef23f73fb580c62d9a8c7d5d49e29e6  bin/iceunpack
+devel@mypi3-16:/usr/local $ md5sum bin/yosys*
+3d3df4115ec09e5a62af8273d0ee497c  bin/yosys
+018b92f5275fea920baeee4f84ce94d2  bin/yosys-abc
+930b99b2ea4fc1fe2b236e1461e0162b  bin/yosys-config
+5e55d432eab44349336607626adf7753  bin/yosys-filterlib
+07b65a01f6ae56b096b8427999fef517  bin/yosys-smtbmc
+devel@mypi3-16:/usr/local $ md5sum bin/verilator*
+0a7c8201a65384e5459512ae964d0c1d  bin/verilator
+868d0c14c90a92cb99785ef2310ca3c6  bin/verilator_bin
+8bf60fc4943d103a46cde3959364b1c6  bin/verilator_bin_dbg
+f7a5fef72a1b13da322096ba4e80ab47  bin/verilator_coverage
+bc23ddaf87ac6bc1e08bdaaf884e7820  bin/verilator_coverage_bin_dbg
+07705275127aaff053ecfa7e7cf8624e  bin/verilator_gantt
+9b4cba58a9bdb4bb10fb93153c931aa1  bin/verilator_profcfunc
+
+devel@mypi3-16:/media/devel/1b763776-4e1d-499c-9f24-a116a58c161f/fpgatools $ md5sum squashfs-root/bin/ice*
+9eab93030b19b342315d4439f7faed5c  squashfs-root/bin/icebox_asc2hlc
+5085717e6e3ceac8837bf6630edd253f  squashfs-root/bin/icebox_chipdb
+eeed36cfc0360a4106777d4967d39998  squashfs-root/bin/icebox_colbuf
+4d7f133d51076d4e43b09e216503a785  squashfs-root/bin/iceboxdb.py
+5c5d184ed78357b115422aed6e3e7ad7  squashfs-root/bin/icebox_diff
+dfeca27a7a7aa87ca6fa108cd6d2cad8  squashfs-root/bin/icebox_explain
+60aeaee14b2920ab20d326d353f56463  squashfs-root/bin/icebox_hlc2asc
+f35a33236ea26c2ba830727bf709b7ab  squashfs-root/bin/icebox_html
+547f268e0d21e56a17842ea901cfbed9  squashfs-root/bin/icebox_maps
+18553322cb203b87815f70559de83d12  squashfs-root/bin/icebox.py
+0226519e515ce8c16c841569aed895df  squashfs-root/bin/icebox_stat
+a2fd2ff4e9d27bf7b8c6783d06561e70  squashfs-root/bin/icebox_vlog
+6c9160315aa106c2c8f27ab5845ecd51  squashfs-root/bin/icebram
+4ca0ff8a6bb3dcdba992b19e14af857d  squashfs-root/bin/icemulti
+0ef23f73fb580c62d9a8c7d5d49e29e6  squashfs-root/bin/icepack
+472d4467057045d87af1a4cca5894bfe  squashfs-root/bin/icepll
+36a1c40a6125f45d656f0c07645a3ed7  squashfs-root/bin/iceprog
+6a673b4c0892f1bd338d790f0cc7c7c9  squashfs-root/bin/icetime
+0ef23f73fb580c62d9a8c7d5d49e29e6  squashfs-root/bin/iceunpack
+devel@mypi3-16:/media/devel/1b763776-4e1d-499c-9f24-a116a58c161f/fpgatools $ md5sum squashfs-root/bin/yosys*
+3d3df4115ec09e5a62af8273d0ee497c  squashfs-root/bin/yosys
+018b92f5275fea920baeee4f84ce94d2  squashfs-root/bin/yosys-abc
+930b99b2ea4fc1fe2b236e1461e0162b  squashfs-root/bin/yosys-config
+5e55d432eab44349336607626adf7753  squashfs-root/bin/yosys-filterlib
+07b65a01f6ae56b096b8427999fef517  squashfs-root/bin/yosys-smtbmc
+devel@mypi3-16:/media/devel/1b763776-4e1d-499c-9f24-a116a58c161f/fpgatools $ md5sum squashfs-root/bin/verilator*
+0a7c8201a65384e5459512ae964d0c1d  squashfs-root/bin/verilator
+868d0c14c90a92cb99785ef2310ca3c6  squashfs-root/bin/verilator_bin
+8bf60fc4943d103a46cde3959364b1c6  squashfs-root/bin/verilator_bin_dbg
+f7a5fef72a1b13da322096ba4e80ab47  squashfs-root/bin/verilator_coverage
+bc23ddaf87ac6bc1e08bdaaf884e7820  squashfs-root/bin/verilator_coverage_bin_dbg
+07705275127aaff053ecfa7e7cf8624e  squashfs-root/bin/verilator_gantt
+9b4cba58a9bdb4bb10fb93153c931aa1  squashfs-root/bin/verilator_profcfunc
