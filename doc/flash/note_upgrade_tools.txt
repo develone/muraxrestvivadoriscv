@@ -59,6 +59,13 @@ verilator -O3 -Mdir ./obj-arm -trace -cc -y cpu -y ../hexbus -y ../pport main.v
                      main.v:91:8: ... Location of module with timescale
    91 | module main(i_clk, i_reset,
       |        ^~~~
+This error required adding -Wno-TIMESCALEMOD to catzip/rtl/catzip/Makefile adn chg w_gx_char from wire to a reg.
+diff --git a/rtl/catzip/Makefile b/rtl/catzip/Makefile
+-       verilator -O3 -Mdir $(VDIRFB) -trace -cc $(AUTOVDIRS) main.v
++       verilator -Wno-TIMESCALEMOD -O3 -Mdir $(VDIRFB) -trace -cc $(AUTOVDIRS) main.v
+diff --git a/rtl/hexbus/hbgenhex.v b/rtl/hexbus/hbgenhex.v
+-       wire    [7:0]   w_gx_char;
++       reg     [7:0]   w_gx_char;
 
 icestorm c49586 nextpnr 4419c3 yosys d6d5c2
 icestorm built ok when trying to build nextpr "cmake -DARCH=ice40 ."
