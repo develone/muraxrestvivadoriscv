@@ -1,0 +1,48 @@
+tnt: I did a clone of my repo and the added upstream and fetch then merge. Is this not the correct steps?
+<tnt> there are submodules now. They need to be checked out.   git submodule init && git submodule update
+<develonepi3> tnt: in which repo icestorm or nextpnr or both?
+<tnt> nextpnr
+<develonepi3> tnt Thanks
+tnt: my nextpnr built ok.
+* unkraut has quit (Quit: leaving)
+<develonepi3> tnt: Following yosys update, yosys -ql simple.log -p synth_ice40 -blif catzip.blif -json catzip.json -top toplevel ... ERROR: Assert `ifdef_already_satisfied' failed in frontends/verilog/preproc.cc:758. Any idea. I works okay with Yosys 0.9+1706 (git sha1 UNKNOWN, clang 7.0.1-8+rpi3+deb10u2 -fPIC -Os)
+tnt: Following yosys update, yosys -ql simple.log -p synth_ice40 -blif catzip.blif -json catzip.json -top toplevel ... ERROR: Assert `ifdef_already_satisfied' failed in frontends/verilog/preproc.cc:758.
+mwk> develonepi3: congrats you found a bug
+<mwk> now let's figure out what exactly is going on here
+<develonepi3> mwk: this is line 758 log_assert(ifdef_already_satisfied);
+<mwk> I figured
+
+... why does this code even work
+<mwk> hilarious
+<mwk> I found an unrelated bug in this area of code, but still see no way to trigger that assert
+<mwk> develonepi3: what code does this trigger on?
+* chipb_ is now known as chipb
+<develonepi3> mwk: This is https://github.com/develone/catzip.git which was created from a version of icozip.  catzip connect to a parallel RPi3. It has sdram instead of sram.
+<develonepi3> I was trying to create a blif & json file.
+<develonepi3> I use zipcpu & autofpga to create the toplevl.v & main.v
+<develonepi3> mwk will the simple.log help. I can push to gist if you want.
+<develonepi3> mwk: It was very early Parsing `main.v' using frontend `verilog' following toplevel.v
+<develonepi3> mwk: The version of yosys is 03/24/21.
+<develonepi3> mwk: Yosys shows 3 updates since my version. Would these be the fix. 
+<mwk> ... well that's a very simple reproducer
+<mwk> develonepi3: thanks for the report, it'll be taken care of
+<mwk> https://github.com/YosysHQ/yosys/issues/2711
+<mwk> ... oh gods how is this code this dumb
+
+
+develonepi3: I just refreshed your catzip project, to take a look at the problem you are having on #yosys
+<ZipCPU> Your ... autofpga configuration files are a version out of date.
+<ZipCPU> I had to update autofpga in order to handle buses with multiple masters.
+<ZipCPU> The update was (unfortunately) not backwards compatible.
+<ZipCPU> See for example the difference between your zipbones.txt and the one in icozip
+<ZipCPU> Also, I had to standardize on the order of the Wishbone ACK and STALL signals in slaves.  The correct order is (now) STALL then ACK.  Several items in your design will need this update to work.
+<ZipCPU> There was another reason for the change: I kept making mistakes when hooking up devices under the old way of doing things.
+<ZipCPU> The new way has a macro to help keep that from happening, $@(SLAVE.PORTLIST) expands to all the connections necessary to hook up a slave.
+<ZipCPU> Further, the new version requires the crossbar from wb2axip.  (I needed that to be able to handle multiple masters ...)
+<ZipCPU> You don't need to use @$(SLAVE.PORTLIST), it would just make your typing easier if you do.
+<ZipCPU> The new/updated syntax *should* be documented in autofpga/doc/icd.txt, but I'll let you tell me how useful that file actually is.
+So ... if you want to continue with autofpga (I would recommend doing so), you might want to refresh the files you copied from icozip
+
+<ZipCPU> You'll also want to copy the linker script generation files: mem_*.txt from the auto-data directory of icozip.
+<ZipCPU> Those multiple scripts allow me to build the design for different memory models--that way I can run the ZipCPU from one type of memory while testing another
+ZipCPU> ... or run the CPU test from block RAM, and then hello world from Flash.  You're third test, from SDRAM, would tell you whether there was a fault in the SDRAM controller or not.

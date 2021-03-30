@@ -71,6 +71,7 @@ icestorm c49586 nextpnr 4419c3 yosys d6d5c2
 icestorm built ok when trying to build nextpr "cmake -DARCH=ice40 ."
 -- Using iCE40 chipdb: /home/devel/nextpnr/ice40/chipdb
 -- Configuring incomplete, errors occurred!
+<tnt> there are submodules now. They need to be checked out.   git submodule init && git submodule update
 
 usrlocal032821.img
 squashfs-root
