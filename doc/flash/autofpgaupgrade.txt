@@ -1,0 +1,84 @@
+03/30/21 mypi3-16
+verilog preproc: Assert `ifdef_already_satisfied' failed in frontends/verilog/preproc.cc:758. #2711
+closed
+
+git fetch upstream
+git merge upstream/master
+make
+sudo make install
+
+cd ~/testbuilds/catzip-devbr/catzip/rtl/catzip/
+
+make clean
+
+make cpudefs.h
+
+make design.h
+
+make verilated
+
+make bin
+
+yosys -ql simple.log -p synth_ice40 -blif catzip.blif -json catzip.json -top toplevel ...
+Warning: reg '\txf_wb_write' is assigned in a continuous assignment at ../hexbus/console.v:301.10-301.39.
+Warning: reg '\txf_wb_data' is assigned in a continuous assignment at ../hexbus/console.v:302.10-302.38.
+Warning: Resizing cell port main.swic.i_dbg_sel from 1 bits to 4 bits.
+Warning: Resizing cell port main.swic.o_dbg_ack from 32 bits to 1 bits.
+ERROR: Cell port main.genbus.o_wb_sel is driving constant bits: \hb_sel <= \genbus.o_wb_sel
+make: *** [Makefile:108: catzip.blif] Error 1
+*************************************upgradeautofpga*************************************
+mv autofpga autofpga033021
+
+git clone git@github.com:develone/autofpga.git
+
+cd autofpga
+
+git remote add upstream https://github.com/ZipCPU/autofpga.git
+
+git fetch upstream
+
+git merge upstream/master
+
+make 
+
+md5sum sw/autofpga
+5dbabfe49d27db738b6f25e6bc8e0ee4  sw/autofpga
+
+md5sum /usr/local/bin/autofpga 
+5dbabfe49d27db738b6f25e6bc8e0ee4  /usr/local/bin/autofpga
+*************************************upgradeautofpga*************************************
+
+*************************************catzipautofpga*************************************
+mkdir catzip-newautofpga
+
+mkdir catzip-newautofpga
+
+mkdir catzip-newautofpga
+
+cd catzip/
+
+. ./myenv-a.sh
+
+cd auto-data/
+
+make
+autofpga -d -o . global.txt bkram.txt buserr.txt clockpll40.txt pic.txt pwrcount.txt version.txt hbconsole.txt gpio.txt dlyarbiter.txt zipbones.txt sdramdev.txt mem_sdram_bkram.txt sdramscope.txt
+Opened autofpga.dbg
+Clock: clk, is i_clk
+All clocks enumerated
+Bus: zip
+WARNING: zip_dwb's number of addresses changed from 0 to 8388608
+ERR: Linker script for mem_sdram_bkram must have type SCRIPT, not CPU
+WARNING: Bus wb has no associated reset wire, using 'i_reset'
+WARNING: Bus zip has no associated reset wire, using 'i_reset'
+WARNING: Bus hb has no associated reset wire, using 'i_reset'
+WARNING: sdram defines SIM.TICK, but not SIM.CLOCK
+WARNING: zip defines SIM.TICK, but not SIM.CLOCK
+WARNING: hb defines SIM.TICK, but not SIM.CLOCK
+WARNING: sdram defines SIM.TICK, but not SIM.CLOCK
+WARNING: zip defines SIM.TICK, but not SIM.CLOCK
+WARNING: hb defines SIM.TICK, but not SIM.CLOCK
+ERR: ERR: Errors present
+make: *** [Makefile:61: data] Error 1
+
+*************************************catzipautofpga*************************************

@@ -1,3 +1,5 @@
+
+
 tnt: I did a clone of my repo and the added upstream and fetch then merge. Is this not the correct steps?
 <tnt> there are submodules now. They need to be checked out.   git submodule init && git submodule update
 <develonepi3> tnt: in which repo icestorm or nextpnr or both?

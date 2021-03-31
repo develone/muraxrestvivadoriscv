@@ -145,3 +145,25 @@ f7a5fef72a1b13da322096ba4e80ab47  squashfs-root/bin/verilator_coverage
 bc23ddaf87ac6bc1e08bdaaf884e7820  squashfs-root/bin/verilator_coverage_bin_dbg
 07705275127aaff053ecfa7e7cf8624e  squashfs-root/bin/verilator_gantt
 9b4cba58a9bdb4bb10fb93153c931aa1  squashfs-root/bin/verilator_profcfunc
+
+03/30/21
+
+mv autofpga autofpga033021
+
+git clone git@github.com:develone/autofpga.git
+
+cd autofpga
+
+git remote add upstream https://github.com/ZipCPU/autofpga.git
+
+git fetch upstream
+
+git merge upstream/master
+
+make 
+
+md5sum sw/autofpga
+5dbabfe49d27db738b6f25e6bc8e0ee4  sw/autofpga
+
+md5sum /usr/local/bin/autofpga 
+5dbabfe49d27db738b6f25e6bc8e0ee4  /usr/local/bin/autofpga
