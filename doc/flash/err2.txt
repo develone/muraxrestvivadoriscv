@@ -1,0 +1,123 @@
+ZipCPU: Good morning.
+<ZipCPU> And a fine one to you as well.
+<develonepi3> ZipCPU Made the chgs to zipbones.txt it went from several warnings to FATAL ERR: Bus zip has no defined clock
+<ZipCPU> Each bus needs a defined clock.
+<ZipCPU> Does your hbconsole.txt define a clock for the bus?
+<develonepi3> @BUS.CLOCK=clk is in hbconsole.txt for catzip.
+<ZipCPU> What name is given for the bus in hbconsole?  Is it: @BUS.NAME=hb?
+<ZipCPU> ... and does your zipbones have a line, @MASTER.BUS=wb?
+<ZipCPU> If so, which bus was named "zip"?
+<ZipCPU> Ahh ... are you still using the dlyarbiter.txt?  That defines a bus named zip.  It's not needed anymore.
+<develonepi3> @MASTER.BUS=wb should I remove dlyarbiter?
+<ZipCPU> Yes.  Remove dlyarbiter
+<ZipCPU> The wbxbar replaces it.
+<develonepi3> is it wbubus.txt?
+<develonepi3> ZipCPU In my autofpga/autodata I do not see a wbxbar.txt. I looked at wbubus.txt but it is for the uart.
+<ZipCPU> develonepi3: There isn't going to be a wbxbar.txt in autodata.  AutoFPGA requires it to connect your design together.  You can find wbxbar.v in https://github.com/ZipCPU/wb2axip
+<ZipCPU> AutoFPGA requires wbxbar.v that is.  It needs something to be used to connect (possibly many) masters to (possibly many) slaves.
+<ZipCPU> The previous approach I had used had some (known) bugs in it.  wbxbar.v should (now) be bug free.
+<ZipCPU> (The previous bugs had to deal with making a request of one slave with one response time, then another slave with another response time, then struggling when the slaves responded at the same time or out of order.)
+<develonepi3> I put icozip/rtl/icozip/wbxbar.v in rtl/catzip/. 
+<develonepi3> where should it go?
+<ZipCPU> You'll also need addrdecode.v and skidbuffer.v
+<ZipCPU> I'm not sure I follow your question, "where should it go?"?  Didn't you just put it in rtl/catzip?
+<develonepi3>  yes. make in autofpga FATAL ERR: Bus zip has no defined clock
+<develonepi3> I do not have a wbxbar.txt in my auto-data.
+<develonepi3> there also no wbxbar.txt in your icozip repo.
+<ZipCPU> Sigh.  Let me repeat myself: THERE IS NO wbxbar.txt FILE.  YOU DON'T NEED IT.  AutoFPGA will insert wbxbar.v into your main.v automatically to connect everything together.
+<ZipCPU> Look in main.v, and you'll see the reference to wbxbar in there.
+<ZipCPU> As for "Bus zip has no defined clock", REMOVE THE dlyarbiter.txt FROM THE DATA VARIABLE IN YOUR AutoFPGA MAKEFILE.
+<develonepi3> in autodata no main.v and the one ../rtl/catzip has not been modified. I removed dlyarbiter.txt. This is global.txt bkram.txt buserr.txt clockpll40.txt pic.txt pwrcount.txt version.txt hbconsole.txt gpio.txt  zipbones.txt sdramdev.txt mem_sdram_bkram.txt sdramscope.txt.
+<ZipCPU> Did you adjust buserr.txt to match icozip?  How about pic.txt, pwrcount.txt, version.txt, hbconsole.txt, gpio.txt?
+<develonepi3> no just zipbones.txt I will work on the others.
+<ZipCPU> You may also need to adjust gpio.v
+<ZipCPU> You may also need to upgrade the CPU.  Check for differences between zipbones.v and icozip's zipbones.v to see if the interface changed there at all.
+<develonepi3> Is it wbgpio.v instead of gpio.v?
+<ZipCPU> Yes
+* zzj__ has quit (Ping timeout: 240 seconds)
+* zzj (~zzj@101.87.103.192) has joined
+<ZipCPU> Incidentally, I did write a blog article some time back regarding this wbgpio.v design, in case you are interested
+<develonepi3> Zip I created a new branch https://github.com/develone/catzip/tree/devbr with chgs so far. Still getting the same error. 
+<ZipCPU> "grep BUS *.txt | grep zip" reveals the problem is in your mem_sdram_bkram.txt file.
+<develonepi3> ZipCPU I make chgs in the Makefile now the errors chg'ed WARNING: Bus wb has no associated reset wire, using 'i_reset' WARNING: Bus hb has no associated reset wire, using 'i_reset'WARNING: sdram defines SIM.TICK, but not SIM.CLOCK WARNING: sdram defines SIM.TICK, but not SIM.CLOCK.   
+<develonepi3> ZipCPU I did not add the LDSCRIPT:= line since I don't have flash wrking.
+<develonepi3> ZipCPU now see wbxbar in main.v and getting a toplevel.v
+<develonepi3> ZipCPU https://github.com/develone/catzip/blob/devbr/auto-data/Makefile. I tried with uncommented LDSCRIPT make
+<develonepi3> make: *** No rule to make target 'mem_bkram_only.txt', needed by 'data'.  Stop.
+<ZipCPU> Well, do you have the mem_bkram_only.txt file?
+<ZipCPU> Without the LDSCRIPT line, you should be able to build the design (yosys+nextpnr), but you will struggle to build any software for the ZipCPU
+<develonepi3> ZipCPU: https://github.com/develone/catzip/blob/devbr/doc/resultsofautofpgaupgrade.txt see lines 22-28 should be fixed in auto-data in txt file.
+<ZipCPU> Do you want the CPU debugger installed or no?
+<ZipCPU> Oh, no, I'll bet that's not it ... I'll bet the CPU debugger just got the warning 'cause it was the last item in the list
+<ZipCPU> develonepi3: Does your AutoFPGA produce a reference to zipbones that includes a reference to hb_zip_sel?
+<ZipCPU> I couldn't find the reference to hb_zip_sel in your main.v, but when I re-ran AutoFPGA locally it was there.
+<develonepi3> ZipCPU see https://github.com/develone/catzip/blob/devbr/doc/resultsofautofpgaupgrade.txt starting at line 63.  The simulator works. could not run ./arm-zipload -v ../board/cpudtest. just see Halting the CPU. 
+<ZipCPU> Check main.v to make sure your SDRAM is still connected properly
+<develonepi3>  ZipCPU: "https://github.com/develone/catzip/blob/devbr/rtl/catzip/main.v" chg that I made to get "make verilated" to work. line 775 /* verilator lint_off PINMISSING */ line 788 /* verilator lint_off PINMISSING */ . this is where sdram is instantiated line 745-768 wbsdram sdrami(i_clk,
+<develonepi3> In an old ver cputest loads and run ok.
+<develonepi3> ZipCPU: I saw that yosys 2711 was closed. https://github.com/develone/catzip/blob/devbr/doc/resultsofautofpgaupgrade.txt see lines 125-151.  Could this be the problem why simulated cputest fails?
+<develonepi3> ZipCPU looking at icozip/rtl/hexbusconsole.v will see if that is the fix.
+<develonepi3> ZipCPU: modified ../hexbus/console.v & ../hexbus/console.v 9 Warning: Resizing  in consolei.  ERROR: Cell port main.genbus.o_wb_sel
+* X-Scale` (~ARM@216.56.158.5.rev.vodafone.pt) has joined
+* ZipCPU_ (~ZipCPU@c-73-99-155-72.hsd1.va.comcast.net) has joined
+* ZipCPU has quit (Ping timeout: 265 seconds)
+* Flecks (~fleck@serv1.rullz.lv) has joined
+* Fleck has quit (Ping timeout: 240 seconds)
+* X-Scale has quit (Ping timeout: 240 seconds)
+* X-Scale` is now known as X-Scale
+* zzj_ (~zzj@101.87.103.192) has joined
+* zzj has quit (Ping timeout: 240 seconds)
+* zzj_ has quit (Ping timeout: 260 seconds)
+* zzj (~zzj@101.87.103.192) has joined
+<develonepi3> ZipCPU cputest works icozip see https://github.com/develone/catzip/blob/devbr/doc/icozip-test.txt 
+<develonepi3> ZipCPU Just pushed hexbus/console.v & hexbus/hbgenhex.v & doc/resultsofautofpgaupgrade.txt latest errors are at the EOF.
+<develonepi3> The push was in devbr of catzip.
+<ZipCPU_> develonepi3: How old is your version of the hexbus?
+* ChanServ gives channel operator status to ZipCPU_
+* ZipCPU_ is now known as ZipCPU
+<ZipCPU> All of those resizing "Warning: Resizing cell port" ... things should be considered errors.  The build should be clean.
+ Python interface unloaded
+ FiSHLiM plugin unloaded
+ 
+* Loaded log from Tue Mar 30 19:38:45 2021
+ 
+* Now talking on #openarty
+* Topic for #openarty is: The ZipCPU based OpenArty project and other ZipCPU maintained projects | See ZipCPU.com for more info
+* Topic for #openarty set by ZipCPU (Mon Sep 10 03:25:38 2018)
+<develonepi3> ZipCPU: Good morning. For icozip the hbconsole.txt is setup for a Uart.  Will it support the pport as well?
+* Disconnected ()
+* develonepi3 sets mode +Z on develonepi3
+* develonepi3 sets mode +i on develonepi3
+-NickServ- This nickname is registered. Please choose a different nickname, or identify via /msg NickServ identify <password>.
+-freenode-connect- Welcome to freenode. To protect the network all new connections will be scanned for vulnerabilities. This will not harm your computer, and vulnerable hosts will be notified.
+* Received a CTCP VERSION from freenode-connect
+* Now talking on #openarty
+* Topic for #openarty is: The ZipCPU based OpenArty project and other ZipCPU maintained projects | See ZipCPU.com for more info
+* Topic for #openarty set by ZipCPU (Mon Sep 10 03:25:38 2018)
+* Disconnected ()
+* develonepi3 is already in use. Retrying with devel_...
+* devel_ sets mode +Z on devel_
+* devel_ sets mode +i on devel_
+-freenode-connect- Welcome to freenode. To protect the network all new connections will be scanned for vulnerabilities. This will not harm your computer, and vulnerable hosts will be notified.
+* Received a CTCP VERSION from freenode-connect
+* Now talking on #openarty
+* Topic for #openarty is: The ZipCPU based OpenArty project and other ZipCPU maintained projects | See ZipCPU.com for more info
+* Topic for #openarty set by ZipCPU (Mon Sep 10 03:25:38 2018)
+* develonepi3 has quit (Ping timeout: 258 seconds)
+<ZipCPU> devel_ develonepi3: You mean hbconsole.txt is set up for a parallel port, right?  And you are asking whether or not it will work with a serial port?
+<ZipCPU> Is this what you are looking for?  https://github.com/ZipCPU/arrowzip/blob/master/auto-data/hbconsole.txt
+<devel_> No catzip uses parallel port not serial like icozip. What part of hbconsole.txt makes parallel port in new autofpga.
+<ZipCPU> icozip uses the parallel port
+<devel_> I mean the catboard is mounted on Pi
+<ZipCPU> Yes ... and?
+<ZipCPU> The ICO board mounts on a Pi as well.
+<devel_> but is that where you send the wbregs command.
+<ZipCPU> For the ICO board?  Yes.
+<devel_> I thought you had said that you could not use that port on icozip because of the wiring.
+<ZipCPU> No, I definitely use it.
+<ZipCPU> In AutoFPGA Verilog, this is all Parallel port setup: https://github.com/ZipCPU/icozip/blob/master/auto-data/hbconsole.txt#L57-L108
+<ZipCPU> ... and here's the parallel port software controller: https://github.com/ZipCPU/icozip/blob/master/sw/host/netpport.cpp
+<devel_> I replaced all of hexbus with no chg still getting resize and exit with errors in latest yosys. 
+* zzj_ has quit (Ping timeout: 246 seconds)
+<devel_> ZipCPU Where is blog on wbxbar?
+<ZipCPU> https://zipcpu.com/blog/2019/07/17/crossbar.html
