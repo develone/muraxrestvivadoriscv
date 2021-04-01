@@ -24,9 +24,41 @@ devel_> ZipCPU What txt file puts wbxbar in main.v?
 <devel_> ZipCPU: Trying to find a way to proceed.  Instead of upgrading catzip would it be best to start with a icozip & remove flash & sram. Then add sdram..v.  I just tested icozip with Yosys 0.9+4052 (git sha1 0ccc7229, gcc 8.3.0-6+rpi1 -fPIC -Os) nextpnr-ice40 -- Next Generation Place and Route (Version 4419c36d) nextpnr-ice40 -- Next Generation Place and Route (Version 4419c36d). autofpga 5b575380  Verilator 4.100 2020-09-07 rev v4.100-10-g39eea781 
 <devel_> zipcpu Mon Apr 1 14:52:50 2019.  cputest work okay and hello failed.
 <devel_> ZipCPU I have a new repo "https://github.com/develone/catzip-icozip".  I would if you could help modify auto-data/sdramdev.txt from the catzip repo?
-
+rm -rf catzip-icozip/
     localparam      RESET_ADDRESS = 12582912; now in main.v
-    
+
+rsync -avl /media/devel/1b763776-4e1d-499c-9f24-a116a58c161f/fpgatools/catzip-icozip .
+
+cd catzip-icozip/
+
+make
+
+When it get error
+
+cd sim/verilated/
+
+make
+/home/devel/zipcpu/sw/install/cross-tools/lib/gcc/zip/6.2.0/../../../../zip/bin/ld: address 0xc00134 of hello section `.rocode' is not within region `flash'
+/home/devel/zipcpu/sw/install/cross-tools/lib/gcc/zip/6.2.0/../../../../zip/bin/ld: hello section `.ramcode' will not fit in region `flash'
+/home/devel/zipcpu/sw/install/cross-tools/lib/gcc/zip/6.2.0/../../../../zip/bin/ld: address 0xc00134 of hello section `.rocode' is not within region `flash'
+/home/devel/zipcpu/sw/install/cross-tools/lib/gcc/zip/6.2.0/../../../../zip/bin/ld: region `flash' overflowed by -20952612 bytes
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:102: hello] Error 1
+make: *** [Makefile:189: sw-board] Error 2
+
+ls sw/board/cputest
+
+ls sw/host/arm*
+sw/host/arm-dbgscope   sw/host/arm-spixscope  sw/host/arm-zipload
+sw/host/arm-dumpflash  sw/host/arm-sramscope  sw/host/arm-zipstate
+sw/host/arm-flashid    sw/host/arm-wbregs
+sw/host/arm-netpport   sw/host/arm-zipdbg
+
+Manually need to create the simulator.
+
+devel@mypi3-16:~/testbuilds/catzip-icozip/sim/verilated $ make
+devel@mypi3-16:~/testbuilds/catzip-icozip/sim/verilated $ ./arm-main_tb
+
     devel@mypiq3-16:~/testbuilds/catzip-icozip/auto-data $ git diff global.txt
     diff --git a/auto-data/global.txt b/auto-data/global.txt
     index 17c71f6..006e96c 100644
