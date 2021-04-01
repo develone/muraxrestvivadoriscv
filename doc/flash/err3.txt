@@ -1,0 +1,112 @@
+devel_> ZipCPU What txt file puts wbxbar in main.v?
+<ZipCPU> devel_: None.
+<ZipCPU> The reference to wbxbar is done internal to AutoFPGA.
+<ZipCPU> AutoFPGA has an understanding of Wishbone, AXI, and AXI-lite.  When connecting buses of either of those types together, it will use one of wbxbar, axixbar, or axilxbar respectively.
+<devel_> ZipCPU: I just noticed that the new autogpa does not copy files to icpzip/rtl/icozip?
+<devel_> ZipCPU I believe that was why yosys would run in old yosys but not the latest yosys.
+<ZipCPU> AutoFPGA never did that.  That task was always relegated to the main Makefile.
+<devel_> ZipCPU what should the RESET_ADDRESS if you do not have flash? In global.txt @$RESET_ADDRESS=@$bkram.BASE  & @RESET_ADDRESS.FORMAT=32'h%08x localparam      RESET_ADDRESS = @$RESET_ADDRESS; <- yosys does not like In global.txt icozip @$RESET_ADDRESS=@$flash.BASE+131072 localparam      RESET_ADDRESS = 16908288; This is ok.
+<ZipCPU> Yosys should never see any of the @$ variables from AutoFPGA.  If it does, it means you have a value that isn't defined.
+<ZipCPU> I might argue that, without flash, your ideal reset address should be the base of your block RAM
+<devel_> ZipCPU That is what I have in global.txt @$RESET_ADDRESS=@$bkram.BASE but I get ocalparam      RESET_ADDRESS = @$RESET_ADDRESS; in main.v.
+<ZipCPU> Is your block RAM named bkram?
+<devel_> @PREFIX=bkram & @DEVID=BKRAM & @MEM.NAME= @$(PREFIX) in bkram.txt.
+<ZipCPU> Try using instead, in global.txtt, RESET_ADDRESS=@$bkram.REGBASE
+<ZipCPU> Or, rather, @$RESET_ADDRESS=@$bkram.REGBASE // this time with the @$ in front, which should be there
+<ZipCPU> Looking through things, it's more likely that you need to change the reset address in zipbones.txt, rather than global.txt.  My guess is that only one of those two should be present, but I can't remember which is the important one.
+<devel_> I needed it in both global.txt and zipbones.txt this is what I get in main.v localparam      RESET_ADDRESS = 20971520; Does not work if not in global.txt.
+<devel_> Now yosys does like  assign  wb_buildtime_idata = `BUILDTIME; assign  wb_buildtime_ack = wb_buildtime_stb; assign  wb_buildtime_stall = 1'b0;
+<devel_> does not like
+<devel_> Would the sdram need to be instantiate different with new autofpga? 
+<ZipCPU> `BUILDTIME is a macro created by the mkdatev.pl script
+<ZipCPU> You might need to update your script to use the version.txt file I have
+<ZipCPU> Yes, your sdram might need to be instantiated differently with the new AutoFPGA.  At a minimum, you'll need to check the order of the ACK and STALL signals
+<devel_> ZipCPU: Trying to find a way to proceed.  Instead of upgrading catzip would it be best to start with a icozip & remove flash & sram. Then add sdram..v.  I just tested icozip with Yosys 0.9+4052 (git sha1 0ccc7229, gcc 8.3.0-6+rpi1 -fPIC -Os) nextpnr-ice40 -- Next Generation Place and Route (Version 4419c36d) nextpnr-ice40 -- Next Generation Place and Route (Version 4419c36d). autofpga 5b575380  Verilator 4.100 2020-09-07 rev v4.100-10-g39eea781 
+<devel_> zipcpu Mon Apr 1 14:52:50 2019.  cputest work okay and hello failed.
+<devel_> ZipCPU I have a new repo "https://github.com/develone/catzip-icozip".  I would if you could help modify auto-data/sdramdev.txt from the catzip repo?
+
+    localparam      RESET_ADDRESS = 12582912; now in main.v
+    
+    devel@mypiq3-16:~/testbuilds/catzip-icozip/auto-data $ git diff global.txt
+    diff --git a/auto-data/global.txt b/auto-data/global.txt
+    index 17c71f6..006e96c 100644
+    --- a/auto-data/global.txt
+    +++ b/auto-data/global.txt
+    @@ -41,7 +41,7 @@
+     #
+     @KEYS.INTLIST= BUS_ADDRESS_WIDTH NADDR NPIC NSCOPES PIC.MAX REGS.N ID
+     @DEFAULT.BUS=wb
+    -@$RESET_ADDRESS=@$flash.BASE+131072
+    +@$RESET_ADDRESS=@$bkram.REGBASE
+     @VERILATOR_PREFIX=v
+     @REGDEFS.H.INSERT=
+     typedef        struct {
+    devel@mypi3-16:~/testbuilds/catzip-icozip/auto-data $ git diff zipbones.txt
+    diff --git a/auto-data/zipbones.txt b/auto-data/zipbones.txt
+    index 99faddd..9f9f7a9 100644
+    --- a/auto-data/zipbones.txt
+    +++ b/auto-data/zipbones.txt
+    @@ -53,7 +53,7 @@
+     @BUS.NAME=wb
+     @BUS.WIDTH=32
+     @BUS.CLOCK=clk
+    -@$RESET_ADDRESS=@$flash.REGBASE+131072
+    +@$RESET_ADDRESS=@$bkram.REGBASE
+     @SCOPE.TRIGGER=zip_trigger
+     @SCOPE.DATA=zip_debug
+
+devel@mypi3-16:~/testbuilds/catzip-icozip/sim/verilated $ make
+devel@mypi3-16:~/testbuilds/catzip-icozip/sim/verilated $ ./arm-main_tb
+
+devel@mypi3-16:~/testbuilds/catzip-icozip/sim/verilated $ ./arm-main_tb
+Listening on port 8363
+Listening on port 8364
+> T
+
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< W
+> K00000000
+< A00a00015R
+> A00a00015R20210331
+< A02000001W400
+> A02000001K00000000
+< A02000005W
+> A02000005
+
+
+devel@mypi3-16:~/testbuilds/catzip-icozip/sw/host $ ./arm-wbregs version
+00a00014 ( VERSION) : [.!.1] 20210331
+
+devel@mypi3-16:~/testbuilds/catzip-icozip/sw/host $ ./arm-zipload -v ../board/cputest
+Halting the CPU
+Memory regions:
+	Block RAM: 00c00000 - 00c02000
+	Flash (ROM): 01000000 - 02000000
+	SRAM       : 00e00000 - 00e20000
+Loading: ../board/cputest
+Section 0: 00e00000 - 00e03ddc
+Writing to MEM: 00e00000-00e03ddc
+Clearing the CPUs registers
+
