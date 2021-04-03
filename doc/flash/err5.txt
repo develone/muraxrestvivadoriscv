@@ -1,0 +1,18 @@
+<develonepi3> ZipCPU: Is this the correct way to fix wb_sdram_addr[22-1:0], see https://github.com/develone/catzip-icozip/blob/master/doc/results040316.txt?
+<ZipCPU> No, because you still have the wrong width.
+<develonepi3>  ZipCPU: In catzip main.v localparam ZIP_ADDRESS_WIDTH = 23; // Zip-CPU address width in catzip-icozip localparam ZIP_ADDRESS_WIDTH = 24; // Zip-CPU address width? both @$LGMEMSZ=24.
+<ZipCPU> develonepi3: How big is your SDRAM?  LGMEMSZ is the size of the SDRAM in *bytes*, hence why the address width is two less, hence your Verilator warning
+<ZipCPU> Moreover, the size of the SDRAM is tightly coupled to the protocol w/in wbsdram.v.  Are you sure you know what you are doing when changing that?  Just asking.
+<develonepi3> It is 32M. for sdram.
+<ZipCPU> How many row address bits?  How many column address bits?
+<ZipCPU> The design you are copying from has 8 column address bits and 12 row address bits.  These aren't arbitrarily changed.  They are tied to the layout of the memory chip and the number of physical address lines within it.  The number of row address bits is also connected to a special memory configuration command required when starting it up.
+<ZipCPU> You might wish to know what you are doing.
+<develonepi3> ZipCPU it has 4 banks of 13 addr.
+* zzj_ (~zzj@101.84.48.89) has joined
+<develonepi3> ZipCPU 9 col & 13 rows? 
+<develonepi3> ZipCPU sdramdev.v was formally at some point by you if I recall.
+<develonepi3> This code came from arrpwzip.
+<ZipCPU> develonepi3: Just a warning ... I currently make my living off of modifying and customizing my open source designs.  If you want to modify my SDRAM for your purposes on your own, then all power to you.  Just understand that it's not part of the "free" support I provide to people using my designs.
+<develonepi3> ZipCPU: I understand. Before I started this new autofpga effort. I was working on a doc https://github.com/develone/SpinalKeyboardtest/blob/master/doc/pll.pdf.  Maybe we can work on citing the benefits of autofpga.
+<ZipCPU> develonepi3: Your document compares apples to watermelons.  SpinalHDL is an *HDL*, a hardware design language.  AutoFPGA is a Verilog helper used to build a bus of connected components.  AutoFPGA is not a design language at all.
+<ZipCPU> You need to understand--there is nothing AutoFPGA does that can't already be accomplished in Verilog, C/C++, LD scripts, and in Makefile(s)
