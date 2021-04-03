@@ -1,0 +1,93 @@
+develonepi3> ZipCPU: Good morning. 
+<ZipCPU> Good morning
+<develonepi3> ZipCPU: in catzip sdramdev.txt @$LGMEMSZ=24, this creates in main.v localparam ZIP_ADDRESS_WIDTH = 23; // Zip-CPU address width.  With new autofpga  localparam ZIP_ADDRESS_WIDTH = 24; // Zip-CPU address width.  Which is correct?
+<ZipCPU> The "correct" answer is to let AutoFPGA determine the correct answer
+<ZipCPU> Beware of the difference between byte addressing and word addressing though
+<ZipCPU> Most of the Wishbone stuff is word addressed.  The AXI stuff is byte addressed.
+<ZipCPU> That might account for a difference of two bits, though, not a single bit width difference
+<develonepi3> ZipCPU: The generation of ld files is different where do I find info, since I do not have flash working?
+<ZipCPU> From a hardware design point of view, there's a couple of things involved in getting "flash working"
+<ZipCPU> If you just want to access flash memory, you don't need an LD file.
+<ZipCPU> If you want to place CPU instructions into flash when building machine code for a CPU, then you need an LD file referencing the flash.
+<develonepi3> No it is a hw problem.
+<ZipCPU> You should be able to use wbregs to access your "flash" even without referencing it in the LD file
+<ZipCPU> That will allow you to debug the flash, and perhaps even use the CPU to debug the flash--before committing the CPU's program to requiring it
+<develonepi3> ZipCPU: see https://github.com/develone/catzip-icozip/blob/master/doc/sdramdev-errors.txt ERROR: Module `\sdramdev' referenced in module `\main' in cell `\sdrami' is not part of the design.
+<ZipCPU> develonepi3: Do you know what that error means?  It's an easy one to fix.
+<develonepi3> not seeing what your saying.
+<develonepi3> There are so many files at play.
+<develonepi3> Which file is causing the error? It is easy when you know autofpga.
+<develonepi3> At times you same why spinalhdl that could also be said about autofpga the syntax is really strange and many dependencies.
+<ZipCPU> develonepi3: Not at all.  It's the Yosys command that determines what cells are part of the design or not.  The Yosys command needs to contain a list of the files in your design
+<ZipCPU> If your SDRAM controller isn't read in as part of your design to Yosys, then it won't be found as part of your design.
+<ZipCPU> Try this: Remove the "@" from the Make target to build your .json file.  Examine, and then debug, the Yosys file list
+<ZipCPU> AutoFPGA tries to help out this makefile with two tags, the RTL.MAKE.GROUP and RTL.MAKE.FILES
+<ZipCPU> If this all works, there should be a Makefile include (auto.mk or some such) available listing all the files within your design within it.
+<ZipCPU> If not, you can always adjust the make target in your RTL directory.  This is not a part of AutoFPGA, but rather the design structure that is design specific
+<develonepi3> Which file do I remove "@"? in Makefile there is no rule target. An many "@".
+<ZipCPU> What's the JSON target in your Makefile?  In my repo, it's the Makefile in rtl/icozip
+<develonepi3> ZipCPU I see sramdev.v instead of sdramdev.v.  @RTL.MAKE.FILES= sdramdev.v is what I have in sdramdev.txt
+<ZipCPU> Are you copying the AutoFPGA produced files to the directories they belong in?
+<ZipCPU> The Makefile in my repo base does this.  Are you running AutoFPGA from the auto-data directory, or from the main directory?
+<develonepi3> ZipCPU: in auto-data make; cp main.v toplevel.v ../rtl/icozip/
+<ZipCPU> So ... you aren't copying the linker script, the make include file, the board file, or the register definitions to their respective directories?
+<ZipCPU> Ok.
+<ZipCPU> Now you know how AutoFPGA is trying to help you out.
+<develonepi3> ZipCPU at this point I trying to fix sdramdev.txt not the ld file as say between so many makefile and cpp files this is very hard to find what chgs  what. 
+<ZipCPU> Well, sure, but wbregs isn't going to work to verify your changes if you don't copy the regdefs* files to their directory
+<ZipCPU> This is why I always run AutoFPGA from the main Makefile in the base of the repository.
+<ZipCPU> That's the Makefile that will copy the AutoFPGA results to their various locations--but only if they've changed.
+<ZipCPU> Why only if they've changed?  So that running AutoFPGA doesn't automatically trigger a rebuild of everything if it's not required.
+<ZipCPU> The only time I run AutoFPGA from the auto-data directory is if I'm debugging something.
+<ZipCPU> Also, please don't tell me FPGA design is hard because of this--this is nothing but old fashioned Makefile handling which is first and foremost part of Software design, not hardware design.  I borrowed something working (make) from software to use it with hardware design.
+<ZipCPU> For reference, look at the autodata: target within your main Makefile
+<develonepi3> ZipCPU In sdramdev.txt @DEVID=SDRAM @ACCESS=@$(DEVID)_ACCESS in main.v `ifdef SRAM_ACCESS no ifdef SDRAM_ACCESS.
+<ZipCPU> Check the main.v file in your auto-data directory.
+<develonepi3> ZipCPU both auto-data/main.v & rtl/icozip/main.v define        SRAM_ACCESS
+<ZipCPU> Then check the AutoFPGA command line, to make sure it's referencing your sdramdev.txt file
+<develonepi3> ZipCPU: https://github.com/develone/catzip-icozip/blob/master/doc/sdramdev-errors.txt yosys fail sim & sw fail to build. I made chgs in auto-data/Makefile & catzip-icozip/Makefile.
+<develonepi3> Everything is pushed to github.
+<ZipCPU> So ... you're back to the MAIN.INSERT tag that needed to be changed originally, and now still needs to be changed again.  Got it.
+<ZipCPU> (Personally, I'd change wbsdram--that'd be easier)
+<develonepi3> ZipCPU: Not following what your are saying. Should I chg wbsdram.v instead of sdramdev.v?
+<ZipCPU> Ahh ... okay, I didn't see sdramdev.v
+<ZipCPU> Well, tell me, does sdramdev have a WBADDR parameter?
+<develonepi3> what would be the value of parameter WBADDR sramdev has WBADDR = 15;
+<develonepi3> ZipCPU @$LGMEMSZ=24 @$LGMEMSZ=17
+<ZipCPU> Does your sdramdev.v have a WBADDR parameter?  If it doesn't, then why would you set it?
+<develonepi3> I am testing with parameter       WBADDR = 22; in sdramdev.v
+<ZipCPU> What does that mean?
+<ZipCPU> There was no WBADDR parameter in the original wbsdram.v design.  What does your WBADDR command mean?
+<develonepi3> I just added it to sdramdev.v like sramdev.v [(WBADDR-1):0] i_wb_addr;
+<ZipCPU> So ... you are overriding the natural SDRAM address defined by the SDRAM commands to the SDRAM device.  Not sure why you'd do that, but ... go on.
+<develonepi3> Again autofpga is inserting  sdramdev #(.WBADDR(24-2)) since @$LGMEMSZ=24 this is in sdramdev.txt.
+<ZipCPU> No.  AutoFPGA is *copying* that from your sdramdev.txt AutoFPGA configuration file.  It's not *inserting* it, but rather following your instructions to *copy* it into main.v
+<develonepi3> I am going by what I see in sramdev.txt
+<ZipCPU> sramdev is built for a different device.
+<ZipCPU> The sramdev.v file has a different protocol, and therefore WBADDR has a different meaning when working with the SRAM
+<ZipCPU> For example, the WBADDR parameter is used to control how many address wires are required to connect to the SRAM.  The relationship is not the same for an SDRAM.
+ 
+* Loaded log from Fri Apr  2 15:55:39 2021
+ 
+* Now talking on #openarty
+* Topic for #openarty is: The ZipCPU based OpenArty project and other ZipCPU maintained projects | See ZipCPU.com for more info
+* Topic for #openarty set by ZipCPU (Mon Sep 10 03:25:38 2018)
+<develonepi3> ZipCPU `ifdef SDRAM_ACCESS sdramdev sdrami(i_clk, ERROR: Module `sdramdev' referenced in module `main' in cell `sdrami' has only 22 ports, requested port 23. 
+<ZipCPU> So ... adjust the sdramdev.txt configuration file so that it defines the right number of ports.
+<develonepi3> https://github.com/develone/catzip-icozip/blob/master/rtl/icozip/sdramdev.v
+<ZipCPU> develonepi3: Where's this coming from?  https://github.com/develone/catzip-icozip/blob/master/rtl/icozip/main.v#L875
+<ZipCPU> Looks like a Verilog bug copied from your AutoFPGA config file: https://github.com/develone/catzip-icozip/blob/master/auto-data/sdramdev.txt#L135
+<develonepi3> ZipCPU: https://github.com/develone/catzip-icozip/blob/master/rtl/icozip/sdramdev.v
+<develonepi3> ZipCPU This @$(SLAVE.PORTLIST), brings in i_wb_cyc, i_wb_stb, i_wb_we, i_wb_addr, i_wb_data, i_wb_sel, o_wb_ack, o_wb_stall, o_wb_data, yes or no?
+<ZipCPU> Yes.
+<ZipCPU> You don't have to use it, but it is a nice convenience.
+<develonepi3> ZipCPU just pushed new main.v & sdramdev.txt
+<ZipCPU> You never fixed the bug I pointed out then?
+<develonepi3> ZipCPU 22 is the correct ports for sdrami.  What request 23?
+<ZipCPU> Let me ask you again, then, where is this comma coming from?  https://github.com/develone/catzip-icozip/blob/master/rtl/icozip/main.v#L875
+<develonepi3> ZipCPU there was and extra ","
+* lutsabound (uid304675@gateway/web/irccloud.com/x-psnendkcljtppbeg) has joined
+<develonepi3> ZipCPU pushed to github. https://github.com/develone/catzip-icozip/blob/master/doc/results040116.txt. Need to clr my head. Tomorrow will try more.
+<develonepi3> ZipCPU https://github.com/develone/catzip-icozip/blob/master/doc/version040216.png
+<develonepi3> ZipCPU: How do I make the chgs in https://github.com/develone/catzip-icozip/blob/master/doc/results040216.txt main.v & main_tb.cpp
+<develonepi3> ZipCPU I am done for today.
