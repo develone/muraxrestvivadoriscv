@@ -1,0 +1,114 @@
+*********************************catzip
+
+toplevel(
+		i_ram_feedback_clk, o_ram_clk, o_ram_cke, o_ram_cs_n, o_ram_ras_n, o_ram_cas_n,
+		o_ram_we_n, o_ram_bs, o_ram_addr, o_ram_udqm, o_ram_ldqm,
+		io_ram_data,
+		// GPIO wires
+		o_ledg, o_ledr, i_btn,
+		// Parallel port to wishbone / console interface
+		i_pp_dir, i_pp_clk, io_pp_data, o_pp_clkfb,
+		o_dbgwires,
+i_clk,
+	o_dbgwires_scope);
+	
+	ppio #(.W(16))
+		sdramioi((!ram_drive_data), io_ram_data, ram_data, r_delay_in);
+	//assign io_ram_data = (ram_drive_data) ? ram_data : 16'bzzzz_zzzz_zzzz_zzzz;
+
+localparam	ZIP_ADDRESS_WIDTH = 23; // Zip-CPU address width
+	//
+	// Number of ZipCPU interrupts
+	localparam	ZIP_INTS = 16;
+	//
+	// ZIP_START_HALTED
+	//
+	// A boolean, indicating whether or not the ZipCPU be halted on startup?
+	localparam	ZIP_START_HALTED=1'b1;
+	//
+	// ZIP_LGCACHE_SZ
+	//
+	// The cache, if present, will hold 2^ZIP_LGCACHE_SZ values
+	localparam	ZIP_LGCACHE_SZ=8;
+wbsdram sdrami(i_clk,
+		wb_cyc, (wb_stb)&&(sdram_sel),
+		 
+		wb_we, 
+		/* verilator lint_off WIDTH */
+		wb_addr[(24-2):0], 
+		/* verilator lint_off WIDTH */
+		wb_data, wb_sel,
+		 
+		sdram_ack, sdram_stall, sdram_data,
+		o_ram_cs_n, o_ram_cke, o_ram_ras_n, o_ram_cas_n, o_ram_we_n,
+		o_ram_bs, o_ram_addr,
+		o_ram_drive_data, i_ram_data, o_ram_data, o_ram_dqm,
+		o_debug);	
+*********************************catzip-newautofpga
+toplevel(
+i_clk,
+                // GPIO ports
+                o_ledg, o_ledr, i_btn,
+                i_ram_feedback_clk, o_ram_clk, o_ram_cke, o_ram_cs_n, o_ram_ras_
+n, o_ram_cas_n,
+                o_ram_we_n, o_ram_bs, o_ram_addr, o_ram_udqm, o_ram_ldqm,
+                io_ram_data,
+                // Parallel port to wishbone / console interface
+                i_pp_dir, i_pp_clk, io_pp_data, o_pp_clkfb);
+
+        ppio #(.W(16))
+                sdramioi((!ram_drive_data), io_ram_data, ram_data, r_delay_in);
+        //assign io_ram_data = (ram_drive_data) ? ram_data : 16'bzzzz_zzzz_zzzz_zzzz;
+
+
+        localparam      RESET_ADDRESS = 10485760;
+        //
+        // The number of valid bits on the bus
+        localparam      ZIP_ADDRESS_WIDTH = 23; // Zip-CPU address width
+        //
+        // ZIP_START_HALTED
+        //
+        // A boolean, indicating whether or not the ZipCPU be halted on startup?
+        localparam      ZIP_START_HALTED=1'b1;
+`ifdef  SDRAM_ACCESS
+        sdramdev 
+        
+                sdrami(i_clk,
+                        wb_sdram_cyc, wb_sdram_stb, wb_sdram_we,
+                        wb_sdram_addr[(23-1):0],
+                        wb_sdram_data, // 32 bits wide
+                        wb_sdram_sel,  // 32/8 bits wide
+                        wb_sdram_stall, wb_sdram_ack, wb_sdram_idata,
+
+
+                o_ram_cs_n, o_ram_cke, o_ram_ras_n, o_ram_cas_n, o_ram_we_n,
+                o_ram_bs, o_ram_addr,
+                o_ram_drive_data, i_ram_data, o_ram_data, o_ram_dqm,
+                o_debug);       
+
+`else   // SDRAM_ACCESS
+
+        wbxbar #(
+                .NM(2), .NS(6), .AW(23), .DW(32),
+                .SLAVE_ADDR({
+                        // Address width    = 23
+                        // Address LSBs     = 2
+                        // Slave name width = 8
+                        { 23'h400000 }, //    sdram: 0x1000000
+                        { 23'h280000 }, //    bkram: 0x0a00000
+                        { 23'h200000 }, //   wb_sio: 0x0800000
+                        { 23'h180000 }, //  console: 0x0600000
+                        { 23'h100000 }, // watchdog: 0x0400000
+                        { 23'h080000 }  // bustimer: 0x0200000
+                }),
+                .SLAVE_MASK({
+                        // Address width    = 23
+                        // Address LSBs     = 2
+                        // Slave name width = 8
+                        { 23'h600000 }, //    sdram
+                        { 23'h780000 }, //    bkram
+                        { 23'h780000 }, //   wb_sio
+                        { 23'h780000 }, //  console
+                        { 23'h780000 }, // watchdog
+                        { 23'h780000 }  // bustimer
+                }),
